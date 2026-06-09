@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Explorer UI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-database"></i>
+                    <span>Database Explorer</span>
+                </div>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="#" class="nav-item active" id="navChat"><i class="fa-solid fa-message"></i> Agent Chat</a>
+                <a href="#" class="nav-item" id="navTables"><i class="fa-solid fa-table"></i> View Tables</a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="chat-container">
+            <header class="chat-header">
+                <div class="header-info">
+                    <h1 id="pageTitle">Agent Chat</h1>
+                </div>
+                <div class="theme-toggle">
+                    <button id="themeToggleBtn"><i class="fa-solid fa-moon"></i></button>
+                </div>
+            </header>
+
+            <!-- Chat View -->
+            <div id="chatView">
+                <div class="chat-history" id="chatHistory">
+                    <div class="message agent">
+                        <div class="message-avatar">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <p>Hello! I am your interactive AI database assistant! 👋</p>
+                            <p>I can help you query, analyze, and explore your database. Just ask me a question!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="input-wrapper">
+                        <textarea id="userInput" placeholder="Ask anything about your database..." rows="1"></textarea>
+                        <button id="sendBtn" class="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tables View -->
+            <div id="tablesView" style="display: none;">
+                <div class="tables-content">
+                    <div class="tables-header">
+                        <h2>Database Tables</h2>
+                        <button id="refreshTablesBtn" class="btn-primary"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                    </div>
+                    <div id="tablesLoading" style="display: none;" class="loading-state">
+                        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+                    </div>
+                    <div id="tablesContainer">
+                        <!-- Tables will be dynamically injected here -->
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+    
+    <script src="/static/app.js"></script>
+</body>
+</html>

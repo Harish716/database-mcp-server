@@ -1,0 +1,9 @@
+mcp
+python-dotenv
+pandas
+psycopg2-binary
+pymysql
+
+anthropic
+
+google-generativeai

@@ -1,0 +1,63 @@
+Project Development Prompt History (From Scratch)
+
+Below is a complete, step-by-step summary of all the prompts and instructions you provided since the very beginning of the project to build, refine, and upgrade the Employee Database AI Agent:
+
+--- Day 0: The True Beginning ---
+
+1. Project Initialization & File Structure
+   - Pasted the complete project folder tree structure containing all expected files (README.md, requirements.txt, .env.example, main.py, list_tables.py, get_schema.py, run_select.py, connection.py, safety.py, seed.py, custom_agent.py, docker-compose.yml, test files, etc.)
+   - "create the above directories"
+   - "i have attatched you the problem statement and start implementing it for employee database if any directories is considered as not needed ,then you can delete or remove it"
+
+--- Day 1: API & Model Setup ---
+
+2. Agent Development & LLM Setup
+   - "implement using llm my own agent"
+   - "which one is free and efficient"
+   - "ensure the connectivity is perfect"
+
+3. Troubleshooting Initial Anthropic API Issues
+   - Provided terminal error logs showing an Anthropic API Authentication Error (401 - invalid x-api-key)
+   - "i don't want to generate content i want to reterive content from mysql"
+   - "everything is ok but"
+   - "it dosen't shows anything"
+
+4. Core Database Capabilities
+   - "i want the agent to understand different conditions given by user and to show the accurate output in table format (whatever the input given in the plain text format)"
+   - "now nothing is working"
+   - "what does it mean"
+
+--- Day 2: Upgrades, Web UI, and Bug Fixing ---
+
+5. API Key Setup & Model Troubleshooting
+   - "it always shows 'This model is currently experiencing high demand' try grok model"
+   - Provided multiple API keys (Groq and xAI) to ensure the AI agent had a working, free, and fast model to run on.
+   - "in .env there is still the gemini api key where is the gork"
+
+6. Guardrails & Interactive Rules
+   - "yeah now its working perfect, (i want the agent to do only the given 4 tool , if the user enters or asks query which is not in the 4 tools it must tell the user that i have not permission to do those operations but i can help you to do that operations by giving steps) the agent must be very interactive"
+
+7. Codebase Cleanup
+   - "remove any unnecessary files ,directories and lines of code and the agent must tell i don't have permission for that in additional"
+
+8. Model Switching for Free Tier
+   - "can you please switch on to this grok [Groq] api key as it is free"
+
+9. Major Web UI Upgrade
+   - "instead of this boring cli i want attractive and interactive UI"
+   - "please ensure that we are maintaining the suggested tech stack"
+
+10. Agent Logic & Hallucination Fixing
+   - "the claude and the web ui (agents) are working correctly but the cli agent shows differnet it can't understand the plain text .Make it to understand the plain text whatever the user asks"
+
+11. Reverting and Rate Limit Management
+   - "i want the pervious model" / "first previous moddel"
+   - "how much time i need to wait" (When we encountered the Groq 100,000 token daily limit).
+
+12. Final Feature Expansion & Polish
+   - "remove the powered by gorq and llama text and also remove unnecessary files,directories,code lines, and also in UI remove unwanted tabs in view tables tab it must show all the table(sample data) which are available in the database (whole sql) and also whatever the data it shows as result it must have some export option which includes csv,excel and so on"
+
+13. Documentation
+   - "ok now i want you to generate an txt file which summarizes the prompt which i given to you to make you to done this project step by step"
+   - "include yesterday query also(from project scratch)"
+   - "but it misses the yesterdays prompts where i gave you the project directory structure remmber it that was my first prompt"

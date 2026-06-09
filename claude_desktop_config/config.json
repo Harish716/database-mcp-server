@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "employee_database": {
+      "command": "python",
+      "args": [
+        "c:/Users/haris/placement_project/database-mcp-server/server/main.py"
+      ]
+    }
+  }
+}

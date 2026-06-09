@@ -1,0 +1,8 @@
+id,name,department,role,salary,hire_date
+1,Alice Smith,Engineering,Software Engineer,120000.0,2022-01-15
+2,Bob Johnson,Sales,Sales Manager,95000.0,2021-03-22
+3,Charlie Brown,HR,HR Specialist,60000.0,2023-06-10
+4,Diana Prince,Engineering,Data Scientist,135000.0,2020-11-05
+5,Evan Wright,Marketing,Marketing Lead,85000.0,2022-08-19
+6,Fiona Gallagher,Engineering,Frontend Engineer,105000.0,2023-01-05
+7,George Costanza,Sales,Sales Rep,65000.0,2021-09-15
