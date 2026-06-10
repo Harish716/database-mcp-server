@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHON | Teacher Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+    
+    <div id="loading-screen"><div class="loader"></div></div>
+    <div id="toast-container"></div>
+
+    <div class="glass-panel slide-up" style="width: 100%; max-width: 400px;">
+        <div class="text-center mb-3">
+            <h2 class="text-gradient-cyan">Teacher Portal</h2>
+            <p class="text-muted">Sign in to manage attendance</p>
+        </div>
+
+        <form id="teacherLoginForm">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" class="form-control" required placeholder="teacher@aethon.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" class="form-control" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Authenticate Session</button>
+        </form>
+        
+        <div class="text-center mt-4">
+            <a href="index.html" class="nav-link text-muted" style="font-size: 0.9rem;">← Back to Home</a>
+        </div>
+    </div>
+
+    <script src="js/ui.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('teacherLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = 'Authenticating...';
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const res = await apiCall('/api/auth/teacher/login', 'POST', { email, password });
+            
+            if (res.error) {
+                showToast(res.error, 'error');
+                btn.innerText = originalText;
+            } else {
+                localStorage.setItem('aethon_token', res.token);
+                localStorage.setItem('aethon_user', JSON.stringify(res.user));
+                showToast('Login successful', 'success');
+                setTimeout(() => { window.location.href = 'teacher-dashboard.html'; }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

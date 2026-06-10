@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Explorer | AETHON</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .main-content {
+            flex: none;
+            width: calc(100% - 280px);
+            max-width: calc(100vw - 280px);
+            margin-left: 280px;
+            padding: 0;
+            background: #0d0d0d;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .db-sidebar {
+            width: 260px;
+            border-right: 1px solid var(--border-color);
+            background: #0d0d0d;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .db-sidebar-header {
+            padding: 30px 25px 20px 25px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .db-table-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .db-table-item:hover {
+            background: #171717;
+        }
+
+        .db-table-item.active {
+            background: rgba(0, 229, 255, 0.05);
+            border-left-color: #00e5ff;
+            border-radius: 0 8px 8px 0;
+            margin-right: 15px;
+        }
+
+        .db-table-name {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .db-table-item.active .db-table-name {
+            color: #00e5ff;
+        }
+
+        .db-table-rows {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .db-table-item.active .db-table-rows {
+            color: rgba(0, 229, 255, 0.7);
+        }
+
+        .db-main {
+            flex: 1;
+            min-width: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .db-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+
+        .db-title {
+            color: #fff;
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .db-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .db-subtitle span {
+            color: #00e5ff;
+            font-weight: 500;
+        }
+
+        .db-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .db-btn {
+            background: transparent;
+            border: 1px solid #00e5ff;
+            color: #00e5ff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .db-btn:hover {
+            background: rgba(0, 229, 255, 0.1);
+        }
+
+        .db-search-container {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .db-search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .db-search {
+            width: 100%;
+            background: #171717;
+            border: 1px solid var(--border-color);
+            padding: 14px 20px 14px 45px;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .db-search:focus {
+            border-color: #00e5ff;
+        }
+
+        .db-table-container {
+            background: #171717;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: auto;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .db-table th {
+            padding: 18px 25px;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--border-color);
+            text-transform: capitalize;
+            white-space: nowrap;
+        }
+
+        .db-table td {
+            padding: 18px 25px;
+            color: #ececec;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            white-space: nowrap;
+        }
+
+        .db-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .db-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status Pills */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .status-active, .status-present {
+            background: rgba(0, 200, 83, 0.15);
+            color: #00e676;
+        }
+
+        .status-inactive, .status-absent {
+            background: rgba(255, 255, 255, 0.1);
+            color: #aaa;
+        }
+
+        .status-late {
+            background: rgba(255, 171, 0, 0.15);
+            color: #ffab00;
+        }
+
+        .db-footer {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .db-showing {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .db-pagination {
+            display: flex;
+            gap: 8px;
+        }
+
+        .db-page-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .db-page-btn:hover {
+            border-color: #00e5ff;
+            color: #00e5ff;
+        }
+
+        .db-page-btn.active {
+            background: #00e5ff;
+            border-color: #00e5ff;
+            color: #000;
+            font-weight: 600;
+        }
+
+        /* Modal for full row details */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px; right: 20px;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .modal-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-label {
+            width: 150px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .modal-value {
+            flex: 1;
+            color: #fff;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="brand">
+                AETHON<br>
+                <span style="font-size:0.7rem; color:var(--text-muted); font-weight: 500; letter-spacing: 0;">AI Database Control</span>
+            </div>
+            <nav id="sidebar-nav"></nav>
+        </aside>
+
+        <main class="main-content" data-lenis-prevent>
+            <div class="db-sidebar">
+                <div class="db-sidebar-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                    Tables
+                </div>
+                <div id="tablesList">
+                    <!-- Tables populated by JS -->
+                </div>
+            </div>
+
+            <div class="db-main">
+                <div class="db-header">
+                    <div>
+                        <div class="db-title">Database Explorer</div>
+                        <div class="db-subtitle" id="dbSubtitle">Viewing table: <span>-</span></div>
+                    </div>
+                    <div class="db-actions">
+                        <button class="db-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                            Filter
+                        </button>
+                        <button class="db-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+
+                <div class="db-search-container">
+                    <svg class="db-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" class="db-search" id="searchInput" placeholder="Search records...">
+                </div>
+
+                <div class="db-table-container" data-lenis-prevent>
+                    <table class="db-table" id="dataTable">
+                        <thead id="dataHead"></thead>
+                        <tbody id="dataBody"></tbody>
+                    </table>
+                    <div id="dataMsg" style="color:var(--text-muted); padding: 30px; text-align: center; display: none;">Please select a table.</div>
+                </div>
+
+                <div class="db-footer">
+                    <div class="db-showing" id="dataShowing">Showing 0 entries</div>
+                    <div class="db-pagination">
+                        <button class="db-page-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                        <button class="db-page-btn active">1</button>
+                        <button class="db-page-btn">2</button>
+                        <button class="db-page-btn">3</button>
+                        <button class="db-page-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for full row details -->
+    <div class="modal-overlay" id="rowModal">
+        <div class="modal-content" data-lenis-prevent>
+            <span class="modal-close" onclick="document.getElementById('rowModal').style.display='none'">&times;</span>
+            <div class="modal-title" id="modalTitle">Record Details</div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('aethon_token');
+            if (!token) window.location.href = '/login.html';
+
+            const tablesList = document.getElementById('tablesList');
+            const dataHead = document.getElementById('dataHead');
+            const dataBody = document.getElementById('dataBody');
+            const dataMsg = document.getElementById('dataMsg');
+            const dbSubtitle = document.getElementById('dbSubtitle');
+            const dataShowing = document.getElementById('dataShowing');
+            const modal = document.getElementById('rowModal');
+            const modalBody = document.getElementById('modalBody');
+
+            let currentTable = null;
+            let currentData = [];
+
+            window.loadTable = async function(tableName) {
+                currentTable = tableName;
+                
+                // Update active state in sidebar
+                document.querySelectorAll('.db-table-item').forEach(el => el.classList.remove('active'));
+                const activeNav = document.getElementById('nav-' + tableName);
+                if (activeNav) activeNav.classList.add('active');
+
+                // Update Header
+                dbSubtitle.innerHTML = `Viewing table: <span>${tableName}</span>`;
+                
+                dataMsg.style.display = 'block';
+                dataMsg.innerText = "Loading data...";
+                dataBody.innerHTML = '';
+                dataHead.innerHTML = '';
+                
+                // Update URL silently
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?table=' + tableName;
+                window.history.pushState({path:newUrl}, '', newUrl);
+
+                try {
+                    const res = await fetch('/api/db-explorer/data/' + tableName, {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const data = await res.json();
+                    currentData = data;
+                    
+                    if (data.length === 0) {
+                        dataMsg.style.display = 'block';
+                        dataMsg.innerText = 'Table is empty.';
+                        dataShowing.innerText = 'Showing 0 entries';
+                        return;
+                    }
+                    
+                    dataMsg.style.display = 'none';
+                    const allColumns = Object.keys(data[0]);
+                    
+                    // Display columns: Try to mimic Figma design for 'rewards' (ID, Name, Email, Department, Status)
+                    // Since it's dynamic, we show the first 6 columns
+                    let displayColumns = allColumns.slice(0, 6);
+                    
+                    dataHead.innerHTML = `<tr>${displayColumns.map(c => `<th>${c.replace(/_/g, ' ')}</th>`).join('')}</tr>`;
+                    
+                    renderRows(data, displayColumns, allColumns);
+                    dataShowing.innerText = `Showing 1 to ${Math.min(data.length, 100)} of ${data.length} entries`;
+
+                } catch (err) {
+                    dataMsg.style.display = 'block';
+                    dataMsg.innerText = `Error loading data: ${err.message}`;
+                }
+            };
+
+            // Fetch tables
+            try {
+                const res = await fetch('/api/db-explorer/tables', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const tables = await res.json();
+                
+                tablesList.innerHTML = tables.map(t => `
+                    <div class="db-table-item" onclick="loadTable('${t.name}')" id="nav-${t.name}">
+                        <div class="db-table-name">${t.name}</div>
+                        <div class="db-table-rows">${t.rowCount.toLocaleString()} rows</div>
+                    </div>
+                `).join('');
+
+                // Determine which table to load
+                const urlParams = new URLSearchParams(window.location.search);
+                const tableFromUrl = urlParams.get('table');
+                
+                if (tableFromUrl && tables.find(t => t.name === tableFromUrl)) {
+                    loadTable(tableFromUrl);
+                } else if (tables.length > 0) {
+                    // Default to 'users' if it exists, or first table
+                    const defaultTbl = tables.find(t => t.name === 'users') ? 'users' : tables[0].name;
+                    loadTable(defaultTbl);
+                } else {
+                    dataMsg.style.display = 'block';
+                    dataMsg.innerText = 'No tables found in database.';
+                }
+            } catch (err) {
+                console.error("Error fetching tables:", err);
+            }
+            function renderRows(data, displayColumns, allColumns) {
+                dataBody.innerHTML = '';
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    
+                    tr.innerHTML = displayColumns.map(c => {
+                        let val = row[c] !== null ? row[c] : 'NULL';
+                        let strVal = String(val).toUpperCase();
+                        
+                        // Render status pills
+                        if (c.toLowerCase().includes('status')) {
+                            if (strVal === 'ACTIVE' || strVal === 'PRESENT') {
+                                return `<td><span class="status-pill status-active">Active</span></td>`;
+                            } else if (strVal === 'INACTIVE' || strVal === 'ABSENT') {
+                                return `<td><span class="status-pill status-inactive">${strVal === 'ABSENT' ? 'Absent' : 'Inactive'}</span></td>`;
+                            } else if (strVal === 'LATE') {
+                                return `<td><span class="status-pill status-late">Late</span></td>`;
+                            }
+                        }
+                        
+                        return `<td>${val}</td>`;
+                    }).join('');
+                    
+                    // Click to show modal
+                    tr.style.cursor = 'pointer';
+                    tr.onclick = () => {
+                        modalBody.innerHTML = allColumns.map(c => `
+                            <div class="modal-row">
+                                <div class="modal-label">${c}</div>
+                                <div class="modal-value">${row[c] !== null ? row[c] : '<i>NULL</i>'}</div>
+                            </div>
+                        `).join('');
+                        modal.style.display = 'flex';
+                    };
+                    dataBody.appendChild(tr);
+                });
+            }
+
+            // Close modal
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        });
+    </script>
+</body>
+</html>

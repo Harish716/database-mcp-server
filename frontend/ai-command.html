@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Command Center | AETHON</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .ai-message { display: flex; flex-direction: column; width: 100%; margin-bottom: 20px;}
+        .ai-message.user .msg-content { align-self: flex-end; background: #2f2f2f; color: #fff; padding: 14px 20px; border-radius: 12px; border-bottom-right-radius: 4px; font-size:0.95rem; }
+        .ai-message.ai .msg-content { align-self: flex-start; color: #ececec; padding: 0; line-height: 1.6; font-size:0.95rem; }
+        .ai-send-btn:disabled { background: #555; cursor: not-allowed; opacity: 0.7; }
+        .ai-new-chat-btn {
+            background: #2a2a2a;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        .ai-new-chat-btn:hover { background: #333; }
+    </style>
+</head>
+<body>
+    <div class="cg-layout">
+        <!-- 1. Global Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                AETHON<br>
+                <span style="font-size:0.7rem; color:var(--text-muted); font-weight: 500; letter-spacing: 0;">AI Database Control</span>
+            </div>
+            <nav id="sidebar-nav"></nav>
+        </aside>
+
+        <!-- 2. History Panel -->
+        <div class="ai-history-panel" data-lenis-prevent style="margin-left: 280px;">
+            <button class="ai-new-chat-btn" onclick="createNewSession()">
+                <span style="font-size: 1.2rem;">+</span> New chat
+            </button>
+            <div class="ai-history-header" style="margin-top: 20px;">
+                <span style="font-size:1.1rem; color: var(--primary);">🕒</span> History
+            </div>
+            <div id="historyList" style="flex:1; overflow-y:auto;">
+                <!-- History Items Rendered Here -->
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <main class="cg-main">
+            <!-- Topbar -->
+            <div class="cg-topbar">
+                AETHON AI <span style="font-size: 0.8rem; color:#888; margin-left: 10px; padding: 2px 6px; border: 1px solid #444; border-radius: 4px;">beta</span>
+            </div>
+
+            <div class="cg-content-wrapper" id="contentWrapper" data-lenis-prevent style="overflow-y: auto;">
+                <div id="chatHistory" style="display: flex; flex-direction: column; width: 100%; min-height: 100%;">
+                    <!-- Messages or Welcome State -->
+                </div>
+            </div>
+
+            <!-- Input Box Fixed at Bottom -->
+            <div class="cg-docked-input" id="inputContainer">
+                <form id="chatForm" style="width: 100%; max-width: 800px;">
+                    <div class="cg-input-box">
+                        <button type="button" class="cg-icon-btn"><span style="font-size: 1.5rem;">+</span></button>
+                        <input type="text" id="promptInput" placeholder="Ask anything..." autocomplete="off" required>
+                        <button type="submit" id="sendBtn" class="cg-send-btn">↑</button>
+                    </div>
+                    <div style="text-align: center; font-size: 0.7rem; color: #888; margin-top: 10px;">
+                        AETHON AI can make mistakes. Check important info.
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        let sessions = [];
+        let currentSessionId = null;
+
+        const historyList = document.getElementById('historyList');
+        const chatHistory = document.getElementById('chatHistory');
+        const chatForm = document.getElementById('chatForm');
+        const promptInput = document.getElementById('promptInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatArea = document.getElementById('contentWrapper');
+
+        function generateId() {
+            return 'sess_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function createNewSession() {
+            const id = generateId();
+            const session = { session_id: id, title: 'New Chat', updated_at: new Date().toISOString() };
+            sessions.unshift(session);
+            currentSessionId = id;
+            
+            chatHistory.innerHTML = renderWelcome();
+            renderSidebar();
+        }
+
+        function timeAgo(dateString) {
+            const ms = new Date(dateString).getTime();
+            const seconds = Math.floor((Date.now() - ms) / 1000);
+            if (seconds < 60) return "Just now";
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes} min ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours} hours ago`;
+            const days = Math.floor(hours / 24);
+            return `${days} days ago`;
+        }
+
+        async function deleteSession(event, id) {
+            event.stopPropagation();
+            try {
+                await api.deleteSession(id);
+                sessions = sessions.filter(s => s.session_id !== id);
+                if (currentSessionId === id) {
+                    currentSessionId = sessions.length > 0 ? sessions[0].session_id : null;
+                    if (!currentSessionId) createNewSession();
+                    else await loadChat();
+                }
+                renderSidebar();
+            } catch(e) {
+                console.error("Delete failed", e);
+            }
+        }
+
+        function renderSidebar() {
+            historyList.innerHTML = '';
+            sessions.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'ai-history-item' + (s.session_id === currentSessionId ? ' active' : '');
+                
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="ai-history-title">${s.title}</div>
+                        <button class="ai-delete-btn" onclick="deleteSession(event, '${s.session_id}')" style="background:transparent; border:none; color:#888; cursor:pointer;">&times;</button>
+                    </div>
+                    <div class="ai-history-time">${timeAgo(s.updated_at)}</div>
+                `;
+                div.onclick = async () => {
+                    currentSessionId = s.session_id;
+                    renderSidebar();
+                    await loadChat();
+                };
+                historyList.appendChild(div);
+            });
+        }
+
+        function submitTryAsking(text) {
+            promptInput.value = text;
+            chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
+
+        function renderWelcome() {
+            return `
+                <div class="cg-centered-view">
+                    <div class="cg-title">Where should we begin?</div>
+                    <div class="cg-pills-container">
+                        <button type="button" class="cg-pill" onclick="submitTryAsking('Create an employee')"><span style="margin-right: 8px;">📝</span> Create an employee</button>
+                        <button type="button" class="cg-pill" onclick="submitTryAsking('Show reward statistics')"><span style="margin-right: 8px;">📊</span> Show reward statistics</button>
+                        <button type="button" class="cg-pill" onclick="submitTryAsking('Look up attendance')"><span style="margin-right: 8px;">🔍</span> Look up attendance</button>
+                        <button type="button" class="cg-pill" onclick="submitTryAsking('List all departments')"><span style="margin-right: 8px;">🏢</span> List all departments</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadChat() {
+            chatHistory.innerHTML = '';
+            appendMessageToDOM('ai', 'Loading...');
+            
+            const session = sessions.find(s => s.session_id === currentSessionId);
+            if (!session) return;
+
+            try {
+                const messages = await api.getSessionMessages(currentSessionId);
+                chatHistory.innerHTML = '';
+                
+                if (messages.length === 0) {
+                    chatHistory.innerHTML = renderWelcome();
+                } else {
+                    messages.forEach(row => {
+                        try {
+                            const msgObj = JSON.parse(row.content);
+                            if ((msgObj.role === 'user' || msgObj.role === 'assistant') && typeof msgObj.content === 'string' && msgObj.content.trim() !== '') {
+                                 appendMessageToDOM(msgObj.role === 'assistant' ? 'ai' : 'user', msgObj.content);
+                            }
+                        } catch(e) {}
+                    });
+                }
+            } catch (e) {
+                if (e.message.includes('not found')) {
+                    chatHistory.innerHTML = renderWelcome();
+                } else {
+                    appendMessageToDOM('ai', `<span style="color:#ff5555">Error loading chat</span>`);
+                }
+            }
+            chatArea.scrollTop = chatArea.scrollHeight;
+            resetPipeline();
+        }
+
+        function appendMessageToDOM(role, content) {
+            const centered = chatHistory.querySelector('.cg-centered-view');
+            if (centered) centered.remove();
+
+            const div = document.createElement('div');
+            div.className = `cg-message`;
+            let formattedContent = content.replace(/\n/g, '<br>');
+            
+            const avatarChar = role === 'ai' ? 'A' : 'U';
+            const avatarClass = role === 'ai' ? 'ai' : 'user';
+
+            div.innerHTML = `
+                <div class="cg-avatar ${avatarClass}">${avatarChar}</div>
+                <div class="cg-msg-body">${formattedContent}</div>
+            `;
+            
+            chatHistory.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function resetPipeline() {
+            // Pipeline removed
+        }
+
+        function animatePipelineStep(stepNum) {
+            // Pipeline removed
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = promptInput.value.trim();
+            if(!prompt) return;
+
+            appendMessageToDOM('user', prompt);
+            
+            promptInput.value = '';
+            promptInput.disabled = true;
+            sendBtn.disabled = true;
+
+            const loadingId = 'loading_' + Date.now();
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = loadingId;
+            loadingDiv.className = `cg-message`;
+            loadingDiv.innerHTML = `
+                <div class="cg-avatar ai">A</div>
+                <div class="cg-msg-body" style="color:#888;">Thinking...</div>
+            `;
+            chatHistory.appendChild(loadingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            try {
+                const res = await api.sendAiCommand(prompt, currentSessionId);
+                
+                document.getElementById(loadingId).remove();
+                appendMessageToDOM('ai', res.answer);
+                
+                sessions = await api.getSessions();
+                renderSidebar();
+                loadActivity();
+            } catch (err) {
+                document.getElementById(loadingId).remove();
+                appendMessageToDOM('ai', `<span style="color:#ff5555">Error: ${err.message}</span>`);
+            } finally {
+                promptInput.disabled = false;
+                sendBtn.disabled = false;
+                promptInput.focus();
+            }
+        });
+
+        async function loadActivity() {
+            // Deprecated since pipeline is removed, but we'll leave it as a no-op just in case
+        }
+
+        async function initChats() {
+            try {
+                sessions = await api.getSessions();
+                
+                if (window.location.search.includes('new=1')) {
+                    currentSessionId = null;
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+
+                if (!currentSessionId || sessions.length === 0) {
+                    createNewSession();
+                } else if (!sessions.find(s => s.session_id === currentSessionId)) {
+                    currentSessionId = sessions[0].session_id;
+                }
+
+                renderSidebar();
+                await loadChat();
+                
+                const pendingPrompt = localStorage.getItem('aethon_pending_prompt');
+                if (pendingPrompt) {
+                    localStorage.removeItem('aethon_pending_prompt');
+                    setTimeout(() => {
+                        submitTryAsking(pendingPrompt);
+                    }, 500);
+                }
+            } catch (e) {
+                console.error("Init chats error", e);
+            }
+        }
+
+        // Init
+        initChats();
+    </script>
+</body>
+</html>

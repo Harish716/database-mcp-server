@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | AETHON</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+            background: var(--bg-secondary);
+            padding: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .login-box h2 {
+            color: var(--primary);
+            margin-bottom: 30px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        .error-msg {
+            color: var(--danger);
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-box">
+            <h2>AETHON SECURE</h2>
+            <div class="error-msg" id="errorMsg"></div>
+            <form id="loginForm">
+                <div>
+                    <label>Email Address</label>
+                    <input type="email" id="email" required placeholder="admin@aethon.local">
+                </div>
+                <div>
+                    <label>Password</label>
+                    <input type="password" id="password" required placeholder="password123">
+                </div>
+                <button type="submit" class="btn" style="width: 100%">Authenticate</button>
+            </form>
+            <div style="text-align:center; margin-top: 20px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; border: 1px dashed #333;">
+                <strong>Demo Accounts (Pass: password123)</strong><br>
+                <span style="color:#00e5ff">Admin:</span> admin@aethon.local<br>
+                <span style="color:#00e5ff">User:</span> ashley.garcia1@aethon.local
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.style.display = 'none';
+
+            try {
+                // Attempt login immediately
+                const res = await api.login(email, password);
+                
+                // If successful, show the fancy loader then redirect
+                showLoader([
+                    'Initializing AI Engine...',
+                    'Loading MCP Services...',
+                    'Connecting Database...',
+                    'System Ready...'
+                ], () => {
+                    window.location.href = '/dashboard.html';
+                }, res.user.full_name);
+            } catch (err) {
+                // If it fails, show the error instantly before any loaders
+                errorMsg.innerText = err.message || "Invalid credentials";
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

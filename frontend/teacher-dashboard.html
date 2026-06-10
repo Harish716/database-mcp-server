@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHON | Teacher Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="loading-screen"><div class="loader"></div></div>
+    <div id="toast-container"></div>
+
+    <nav class="navbar">
+        <div class="brand">
+            <span class="brand-icon">⬢</span> AETHON <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 400; margin-left: 10px;">| Teacher Mode</span>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="nav-link active">Dashboard</a>
+            <a href="#" class="nav-link" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="flex justify-between items-center mb-4 slide-up">
+            <h2 class="text-gradient-cyan">System Overview</h2>
+            <div id="clock" class="text-muted font-mono" style="font-family: monospace; font-size: 1.1rem;">00:00:00</div>
+        </div>
+
+        <div class="dashboard-grid slide-up delay-1">
+            <div class="glass-panel stat-card">
+                <div class="stat-title">Total Enrolled</div>
+                <div class="stat-value" id="stat-total">0</div>
+            </div>
+            <div class="glass-panel stat-card">
+                <div class="stat-title">Present Today</div>
+                <div class="stat-value text-gradient-cyan" id="stat-present">0</div>
+            </div>
+            <div class="glass-panel stat-card">
+                <div class="stat-title">Absent Today</div>
+                <div class="stat-value" style="color: var(--danger-red);" id="stat-absent">0</div>
+            </div>
+            <div class="glass-panel stat-card">
+                <div class="stat-title">Reward Eligible</div>
+                <div class="stat-value text-gradient-purple" id="stat-eligible">0</div>
+            </div>
+        </div>
+
+        <div class="flex gap-2 mb-4 slide-up delay-2" style="gap: 1.5rem; flex-wrap: wrap;">
+            
+            <div class="glass-panel" style="flex: 2; min-width: 600px;">
+                <div class="flex justify-between items-center mb-3">
+                    <h3>Student Roster</h3>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by name or reg no..." style="width: 250px; padding: 0.5rem; background: rgba(0,0,0,0.5);">
+                </div>
+                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                    <table id="studentsTable">
+                        <thead>
+                            <tr>
+                                <th>Register No</th>
+                                <th>Name</th>
+                                <th>Dept</th>
+                                <th>Attendance</th>
+                                <th>Points</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="glass-panel" style="flex: 1; min-width: 300px;">
+                <h3 class="mb-3">Live Scans</h3>
+                <div id="liveScans" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto;">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="js/ui.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // Check auth
+        const token = localStorage.getItem('aethon_token');
+        const user = JSON.parse(localStorage.getItem('aethon_user'));
+        if (!token || user.role !== 'teacher') {
+            window.location.href = 'teacher-login.html';
+        }
+
+        // Live Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        async function loadDashboard() {
+            const data = await apiCall('/api/dashboard/teacher');
+            if (data.error) {
+                showToast(data.error, 'error');
+                return;
+            }
+
+            // Stats
+            animateValue('stat-total', 0, data.stats.totalStudents, 1000);
+            animateValue('stat-present', 0, data.stats.presentToday, 1000);
+            animateValue('stat-absent', 0, data.stats.absentToday, 1000);
+            animateValue('stat-eligible', 0, data.stats.rewardEligible, 1000);
+
+            // Table
+            const tbody = document.querySelector('#studentsTable tbody');
+            tbody.innerHTML = '';
+            window.allStudents = data.students; // save for search
+            renderTable(data.students);
+
+            // Live Scans
+            const scansDiv = document.getElementById('liveScans');
+            scansDiv.innerHTML = '';
+            if(data.recentScans.length === 0) scansDiv.innerHTML = '<p class="text-muted">No scans yet today.</p>';
+            data.recentScans.forEach(scan => {
+                scansDiv.innerHTML += `
+                    <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--neon-cyan);">
+                        <div>
+                            <div style="font-weight: bold;">${scan.name}</div>
+                            <div class="text-muted" style="font-size: 0.8rem;">${scan.register_no}</div>
+                        </div>
+                        <div class="font-mono text-muted" style="font-size: 0.9rem;">
+                            ${scan.attendance_time}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderTable(students) {
+            const tbody = document.querySelector('#studentsTable tbody');
+            tbody.innerHTML = '';
+            students.forEach(s => {
+                const perc = parseFloat(s.attendance_percentage);
+                let badgeClass = 'badge-success';
+                let statusText = 'Eligible';
+                if (perc < 75) { badgeClass = 'badge-danger'; statusText = 'Critical'; }
+                else if (perc < 90) { badgeClass = 'badge-warning'; statusText = 'Warning'; }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="font-mono">${s.register_no}</td>
+                        <td style="font-weight: 500;">${s.name}</td>
+                        <td class="text-muted">${s.department}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span>${s.attendance_percentage}%</span>
+                                <div style="width: 50px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px;">
+                                    <div style="width: ${perc}%; height: 100%; background: ${perc >= 90 ? 'var(--success-green)' : (perc >= 75 ? 'var(--warning-orange)' : 'var(--danger-red)')}; border-radius: 2px;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-gradient-purple" style="font-weight: bold;">${s.reward_points}</td>
+                        <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = window.allStudents.filter(s => 
+                s.name.toLowerCase().includes(query) || 
+                s.register_no.toLowerCase().includes(query)
+            );
+            renderTable(filtered);
+        });
+
+        loadDashboard();
+        
+        // Optional: Poll every 10 seconds for real-time feel
+        setInterval(loadDashboard, 10000);
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | AETHON</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2.5rem;
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="layout">
+        <aside class="sidebar" data-lenis-prevent>
+            <div class="brand">
+                AETHON<br>
+                <span style="font-size:0.7rem; color:var(--text-muted); font-weight: 500; letter-spacing: 0;">AI Database Control</span>
+            </div>
+            <nav id="sidebar-nav"></nav>
+        </aside>
+
+        <main class="main-content">
+            <h1 style="margin-bottom: 30px; font-weight: 600;">Welcome, <span id="userName" style="color:var(--primary)">User</span></h1>
+
+            <div id="adminView" style="display: none;">
+                <div class="grid-cards">
+                    <div class="stat-card">
+                        <div class="stat-value" id="empCount">0</div>
+                        <div class="stat-label">Total Employees</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="presentCount">0</div>
+                        <div class="stat-label">Present Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="absentCount">0</div>
+                        <div class="stat-label">Absent Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="rewardCount">0</div>
+                        <div class="stat-label">Rewards Issued</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Recent Database Activity (Audit Logs)</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>Table</th>
+                                <th>Rows</th>
+                                <th>Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Recent AI Activity</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Operation</th>
+                                <th>Prompt</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aiTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="employeeView" style="display: none;">
+                <div class="card">
+                    <div class="card-title">My Profile Summary</div>
+                    <p id="profileData" style="color:var(--text-muted)"></p>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">My Recent Attendance</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="empAttendanceBody"></tbody>
+                    </table>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Recent System Updates</div>
+                    <div id="announcementsList" style="color:var(--text-muted)"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = JSON.parse(localStorage.getItem('aethon_user') || '{}');
+            document.getElementById('userName').innerText = user.full_name || 'User';
+
+            try {
+                const data = await api.getDashboard();
+                
+                if (user.role === 'ADMIN') {
+                    document.getElementById('adminView').style.display = 'block';
+                    document.getElementById('empCount').innerText = data.employeesCount;
+                    document.getElementById('presentCount').innerText = data.presentCount;
+                    document.getElementById('absentCount').innerText = data.absentCount;
+                    document.getElementById('rewardCount').innerText = data.totalRewards;
+
+                    const auditBody = document.getElementById('auditTableBody');
+                    auditBody.innerHTML = data.recentActivity.map(log => `
+                        <tr>
+                            <td>${log.action_type}</td>
+                            <td>${log.table_name}</td>
+                            <td>${log.affected_rows}</td>
+                            <td><span class="badge ${log.risk_level.toLowerCase()}">${log.risk_level}</span></td>
+                        </tr>
+                    `).join('');
+
+                    const aiBody = document.getElementById('aiTableBody');
+                    aiBody.innerHTML = data.aiActivity.map(log => `
+                        <tr>
+                            <td>${log.operation_type}</td>
+                            <td>${log.prompt.substring(0, 50)}...</td>
+                            <td><span class="badge low">${log.execution_status}</span></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    document.getElementById('employeeView').style.display = 'block';
+                    const profile = data.profile || {};
+                    document.getElementById('profileData').innerHTML = `
+                        <strong>Code:</strong> ${profile.employee_code} <br>
+                        <strong>Designation:</strong> ${profile.designation} <br>
+                        <strong>Email:</strong> ${profile.email}
+                    `;
+                    
+                    const attBody = document.getElementById('empAttendanceBody');
+                    if (data.attendance && data.attendance.length > 0) {
+                        attBody.innerHTML = data.attendance.map(a => `
+                            <tr>
+                                <td>${new Date(a.attendance_date).toLocaleDateString()}</td>
+                                <td>${a.check_in ? new Date(a.check_in).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}</td>
+                                <td>${a.check_out ? new Date(a.check_out).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}</td>
+                                <td><span class="badge ${a.status === 'PRESENT' ? 'low' : (a.status === 'ABSENT' ? 'critical' : 'medium')}">${a.status}</span></td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        attBody.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted); text-align:center;">No recent attendance records.</td></tr>';
+                    }
+                    
+                    const annList = document.getElementById('announcementsList');
+                    annList.innerHTML = (data.systemUpdates || []).map(a => `
+                        <div style="margin-bottom:10px; padding: 10px; border:1px solid var(--border-color); border-radius:4px;">
+                            <strong>System Update</strong><br>Admin performed a database <strong>${a.action_type}</strong> on the <strong>${a.table_name}</strong> module.
+                            <br><small style="opacity:0.6">${new Date(a.timestamp).toLocaleString()}</small>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    </script>
+</body>
+</html>

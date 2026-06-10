@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs | AETHON</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .main-content {
+            flex: none;
+            width: calc(100% - 280px);
+            max-width: calc(100vw - 280px);
+            margin-left: 280px;
+            padding: 40px;
+            background: #0d0d0d;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .db-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+
+        .db-title {
+            color: #fff;
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .db-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .db-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .db-btn {
+            background: transparent;
+            border: 1px solid #00e5ff;
+            color: #00e5ff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .db-btn:hover {
+            background: rgba(0, 229, 255, 0.1);
+        }
+
+        .db-search-container {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .db-search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .db-search {
+            width: 100%;
+            background: #171717;
+            border: 1px solid var(--border-color);
+            padding: 14px 20px 14px 45px;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .db-search:focus {
+            border-color: #00e5ff;
+        }
+
+        .db-table-container {
+            background: #171717;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: auto;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .db-table th {
+            padding: 18px 25px;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .db-table td {
+            padding: 18px 25px;
+            color: #ececec;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            white-space: nowrap;
+        }
+
+        .db-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .db-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Standardized Pill Styles */
+        .log-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            min-width: 70px;
+        }
+
+        /* Action Pills */
+        .pill-delete { background: rgba(255, 82, 82, 0.15); color: #ff5252; }
+        .pill-update { background: rgba(255, 183, 77, 0.15); color: #ffb74d; }
+        .pill-insert { background: rgba(105, 240, 174, 0.15); color: #69f0ae; }
+        .pill-select { background: rgba(255, 255, 255, 0.1); color: #bdbdbd; }
+
+        /* Risk Pills */
+        .pill-critical { background: rgba(255, 82, 82, 0.15); color: #ff5252; }
+        .pill-high     { background: rgba(255, 145, 0, 0.15); color: #ff9100; }
+        .pill-medium   { background: rgba(255, 183, 77, 0.15); color: #ffb74d; }
+        .pill-low      { background: rgba(105, 240, 174, 0.15); color: #69f0ae; }
+
+        /* Status Pills */
+        .pill-success { background: rgba(105, 240, 174, 0.05); color: #00e676; border: 1px solid rgba(0,230,118,0.2); }
+        .pill-blocked { background: rgba(255, 82, 82, 0.05); color: #ff5252; border: 1px solid rgba(255,82,82,0.2); }
+
+        .db-footer {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .db-showing {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-low { background: #69f0ae; }
+        .dot-medium { background: #ffb74d; }
+        .dot-high { background: #ff9100; }
+        .dot-critical { background: #ff5252; }
+
+    </style>
+</head>
+<body>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="brand">
+                AETHON<br>
+                <span style="font-size:0.7rem; color:var(--text-muted); font-weight: 500; letter-spacing: 0;">AI Database Control</span>
+            </div>
+            <nav id="sidebar-nav"></nav>
+        </aside>
+
+        <main class="main-content" data-lenis-prevent>
+            <div class="db-header">
+                <div>
+                    <div class="db-title">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Audit Logs
+                    </div>
+                    <div class="db-subtitle">Complete audit trail of all database operations</div>
+                </div>
+                <div class="db-actions">
+                    <button class="db-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                        Filter
+                    </button>
+                    <button class="db-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Export
+                    </button>
+                </div>
+            </div>
+
+            <div class="db-search-container">
+                <svg class="db-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" class="db-search" id="searchInput" placeholder="Search logs...">
+            </div>
+
+            <div class="db-table-container" data-lenis-prevent>
+                <table class="db-table" id="logsTable">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Table</th>
+                            <th>Affected Rows</th>
+                            <th>Risk Level</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsBody">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="db-footer">
+                <div class="db-showing" id="dataShowing">Showing 0 recent entries</div>
+                <div class="legend">
+                    <div class="legend-item"><div class="dot dot-low"></div> Low Risk</div>
+                    <div class="legend-item"><div class="dot dot-medium"></div> Medium Risk</div>
+                    <div class="legend-item"><div class="dot dot-high"></div> High Risk</div>
+                    <div class="legend-item"><div class="dot dot-critical"></div> Critical</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('aethon_token');
+            if (!token) window.location.href = '/login.html';
+
+            const logsBody = document.getElementById('logsBody');
+            const dataShowing = document.getElementById('dataShowing');
+
+            function getActionClass(action) {
+                switch((action || '').toUpperCase()) {
+                    case 'DELETE': return 'pill-delete';
+                    case 'UPDATE': return 'pill-update';
+                    case 'INSERT': return 'pill-insert';
+                    default: return 'pill-select';
+                }
+            }
+
+            function getRiskClass(risk) {
+                switch((risk || '').toUpperCase()) {
+                    case 'CRITICAL': return 'pill-critical';
+                    case 'HIGH': return 'pill-high';
+                    case 'MEDIUM': return 'pill-medium';
+                    case 'LOW': return 'pill-low';
+                    default: return 'pill-low';
+                }
+            }
+
+            function getStatusClass(status) {
+                return (status || '').toUpperCase() === 'BLOCKED' ? 'pill-blocked' : 'pill-success';
+            }
+
+            try {
+                const res = await fetch('/api/audit-logs', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (res.ok) {
+                    const logs = await res.json();
+                    
+                    logsBody.innerHTML = logs.map(log => {
+                        return `
+                            <tr>
+                                <td>${log.timestamp}</td>
+                                <td>${log.user || 'System'}</td>
+                                <td><span class="log-pill ${getActionClass(log.action)}">${log.action}</span></td>
+                                <td>${log.table_name || '-'}</td>
+                                <td>${log.affected_rows !== null ? log.affected_rows : '-'}</td>
+                                <td><span class="log-pill ${getRiskClass(log.risk_level)}">${log.risk_level || 'LOW'}</span></td>
+                                <td><span class="log-pill ${getStatusClass(log.status)}">${log.status}</span></td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    dataShowing.innerText = `Showing ${logs.length} recent entries`;
+                }
+            } catch (err) {
+                console.error("Error fetching audit logs", err);
+            }
+        });
+    </script>
+</body>
+</html>

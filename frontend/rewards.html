@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHON | Rewards Marketplace</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="loading-screen"><div class="loader"></div></div>
+    <div id="toast-container"></div>
+
+    <!-- Modal -->
+    <div id="redeemModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div class="glass-panel" style="width: 400px; text-align: center; border: 1px solid var(--neon-cyan);">
+            <div style="font-size: 4rem; margin-bottom: 1rem;" id="modalIcon">🎁</div>
+            <h2 id="modalTitle">Confirm Redemption</h2>
+            <p class="text-muted my-3" id="modalDesc">Are you sure you want to redeem?</p>
+            <div class="flex gap-2 justify-center mt-4">
+                <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" id="confirmBtn">Confirm Purchase</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar">
+        <div class="brand">
+            <span class="brand-icon">⬢</span> AETHON
+        </div>
+        <div class="nav-links">
+            <a href="student-dashboard.html" class="nav-link">Dashboard</a>
+            <a href="rewards.html" class="nav-link active">Rewards</a>
+            <a href="profile.html" class="nav-link">Profile</a>
+            <a href="#" class="nav-link" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="flex justify-between items-center mb-4 slide-up">
+            <div>
+                <h2 class="text-gradient-cyan">Rewards Marketplace</h2>
+                <p class="text-muted">Redeem your hard-earned points</p>
+            </div>
+            <div class="glass-panel" style="padding: 0.5rem 1.5rem; border-color: var(--neon-purple);">
+                <span class="text-muted" style="font-size: 0.9rem;">Wallet Balance:</span>
+                <span class="text-gradient-purple" style="font-size: 1.5rem; font-weight: bold; margin-left: 10px;" id="walletBalance">0</span> 🪙
+            </div>
+        </div>
+
+        <div class="rewards-grid slide-up delay-1" id="rewardsGrid">
+            <!-- Loaded via JS -->
+        </div>
+
+    </main>
+
+    <script src="js/ui.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        let currentBalance = 0;
+        let selectedItem = null;
+
+        async function loadMarketplace() {
+            // Get student profile to show balance
+            const profileRes = await apiCall('/api/dashboard/student');
+            if(!profileRes.error) {
+                currentBalance = profileRes.profile.reward_points;
+                animateValue('walletBalance', 0, currentBalance, 1000);
+            }
+
+            // Get items
+            const items = await apiCall('/api/rewards/items');
+            const grid = document.getElementById('rewardsGrid');
+            grid.innerHTML = '';
+            
+            items.forEach(item => {
+                const canAfford = currentBalance >= item.cost;
+                grid.innerHTML += `
+                    <div class="glass-panel reward-card" style="${canAfford ? '' : 'opacity: 0.6; filter: grayscale(0.8);'}">
+                        <div class="badge badge-cyan" style="align-self: flex-start; margin-bottom: -20px; z-index: 10;">${item.category}</div>
+                        <div class="reward-icon">${item.icon}</div>
+                        <h4 style="margin: 10px 0;">${item.name}</h4>
+                        <div class="reward-cost">${item.cost} 🪙</div>
+                        <button class="btn ${canAfford ? 'btn-primary' : 'btn-outline'}" 
+                                style="width: 100%; margin-top: 10px;" 
+                                ${canAfford ? `onclick="openModal('${item.name}', ${item.cost}, '${item.icon}')"` : 'disabled'}
+                        >
+                            ${canAfford ? 'Redeem Now' : 'Not Enough Points'}
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function openModal(name, cost, icon) {
+            selectedItem = { name, cost };
+            document.getElementById('modalIcon').innerText = icon;
+            document.getElementById('modalTitle').innerText = name;
+            document.getElementById('modalDesc').innerText = `This will deduct ${cost} points from your wallet.`;
+            document.getElementById('redeemModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('redeemModal').style.display = 'none';
+            selectedItem = null;
+        }
+
+        document.getElementById('confirmBtn').addEventListener('click', async () => {
+            if(!selectedItem) return;
+            const btn = document.getElementById('confirmBtn');
+            btn.innerText = 'Processing...';
+
+            const res = await apiCall('/api/rewards/redeem', 'POST', {
+                reward_name: selectedItem.name,
+                cost: selectedItem.cost
+            });
+
+            if(res.error) {
+                showToast(res.error, 'error');
+            } else {
+                showToast(res.message, 'success');
+                closeModal();
+                loadMarketplace(); // reload to update balance and ui
+            }
+            btn.innerText = 'Confirm Purchase';
+        });
+
+        loadMarketplace();
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

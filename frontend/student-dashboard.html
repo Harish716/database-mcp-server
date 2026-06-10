@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHON | Student Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="loading-screen"><div class="loader"></div></div>
+    <div id="toast-container"></div>
+
+    <nav class="navbar">
+        <div class="brand">
+            <span class="brand-icon">⬢</span> AETHON
+        </div>
+        <div class="nav-links">
+            <a href="student-dashboard.html" class="nav-link active">Dashboard</a>
+            <a href="rewards.html" class="nav-link">Rewards</a>
+            <a href="profile.html" class="nav-link">Profile</a>
+            <a href="#" class="nav-link" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="flex justify-between items-center mb-4 slide-up">
+            <div>
+                <h2 class="text-gradient-purple" id="greeting">Welcome Back, Student</h2>
+                <p class="text-muted" id="regInfo">Reg: --- | Dept: ---</p>
+            </div>
+            <div id="eligibilityBadge">
+                <!-- Eligibility Badge -->
+            </div>
+        </div>
+
+        <div class="dashboard-grid slide-up delay-1">
+            <div class="glass-panel stat-card">
+                <div class="stat-title">Attendance Percentage</div>
+                <div class="flex items-center gap-2 mt-2">
+                    <div class="stat-value" id="stat-attendance">0%</div>
+                    <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-left: 1rem;">
+                        <div id="attendance-bar" style="width: 0%; height: 100%; background: var(--success-green); transition: width 1s ease;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-panel stat-card" style="border-color: rgba(188, 19, 254, 0.3); background: linear-gradient(135deg, rgba(15,20,35,0.8), rgba(188,19,254,0.1));">
+                <div class="stat-title">Reward Wallet</div>
+                <div class="flex items-center justify-between mt-2">
+                    <div class="stat-value text-gradient-purple" id="stat-points" style="font-size: 3rem;">0</div>
+                    <div style="font-size: 2.5rem; filter: drop-shadow(0 0 10px rgba(188,19,254,0.5));">🪙</div>
+                </div>
+                <a href="rewards.html" class="btn btn-outline mt-3" style="font-size: 0.8rem; padding: 0.5rem;">Go to Marketplace →</a>
+            </div>
+
+            <div class="glass-panel stat-card">
+                <div class="stat-title">Attendance Streak</div>
+                <div class="stat-value text-gradient-cyan" id="stat-streak">0 🔥</div>
+                <p class="text-muted" style="font-size: 0.8rem; margin-top: 5px;">Keep it above 90%!</p>
+            </div>
+        </div>
+
+        <div class="glass-panel slide-up delay-2 mt-4">
+            <h3 class="mb-3">Recent Attendance History</h3>
+            <div class="table-container">
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- History loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/ui.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        const token = localStorage.getItem('aethon_token');
+        const user = JSON.parse(localStorage.getItem('aethon_user'));
+        
+        if (!token || user.role !== 'student') {
+            window.location.href = 'student-login.html';
+        }
+
+        async function loadDashboard() {
+            const data = await apiCall('/api/dashboard/student');
+            if(data.error) { showToast(data.error, 'error'); return; }
+
+            const profile = data.profile;
+            document.getElementById('greeting').innerText = `Welcome Back, ${profile.name.split(' ')[0]}`;
+            document.getElementById('regInfo').innerText = `Reg: ${profile.register_no} | Dept: ${profile.department}`;
+
+            // Stats
+            animateValue('stat-attendance', 0, profile.attendance_percentage, 1000, '%');
+            animateValue('stat-points', 0, profile.reward_points, 1000);
+            document.getElementById('stat-streak').innerHTML = `${data.streak} 🔥`;
+
+            const perc = parseFloat(profile.attendance_percentage);
+            const bar = document.getElementById('attendance-bar');
+            setTimeout(() => { bar.style.width = `${perc}%`; }, 100);
+            
+            if(perc >= 90) bar.style.background = 'var(--success-green)';
+            else if(perc >= 75) bar.style.background = 'var(--warning-orange)';
+            else bar.style.background = 'var(--danger-red)';
+
+            // Eligibility Badge
+            const badgeContainer = document.getElementById('eligibilityBadge');
+            if(data.isEligible) {
+                badgeContainer.innerHTML = `<div class="badge badge-success" style="padding: 0.5rem 1rem; font-size: 1rem;">✨ Reward Eligible</div>`;
+            } else {
+                badgeContainer.innerHTML = `<div class="badge badge-warning" style="padding: 0.5rem 1rem; font-size: 1rem;">Target: 90% Attendance</div>`;
+            }
+
+            // Load History
+            const history = await apiCall('/api/attendance/history');
+            const tbody = document.querySelector('#historyTable tbody');
+            tbody.innerHTML = '';
+            if(!history.error) {
+                if(history.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No attendance records found.</td></tr>';
+                }
+                history.forEach(h => {
+                    const dateObj = new Date(h.attendance_date);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="font-mono">${dateObj.toLocaleDateString()}</td>
+                            <td class="font-mono">${h.attendance_time}</td>
+                            <td><span class="badge ${h.status === 'Present' ? 'badge-success' : 'badge-danger'}">${h.status}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        loadDashboard();
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

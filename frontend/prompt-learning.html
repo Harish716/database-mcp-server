@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Learning Center | AETHON</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px;
+            background: #111;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="layout">
+        <aside class="sidebar" data-lenis-prevent>
+            <div class="brand">
+                AETHON<br>
+                <span style="font-size:0.7rem; color:var(--text-muted); font-weight: 500; letter-spacing: 0;">AI Database Control</span>
+            </div>
+            <nav id="sidebar-nav"></nav>
+        </aside>
+
+        <main class="main-content" data-lenis-prevent>
+            <div class="plc-container">
+                <div class="plc-header">
+                    <div class="plc-title">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                        Prompt Learning Center
+                    </div>
+                    <div class="plc-subtitle">Learn how to effectively communicate with AETHON AI</div>
+                </div>
+
+                <div class="plc-manual-card">
+                    <div class="plc-manual-text">
+                        <div class="plc-manual-title">Complete User Manual</div>
+                        <div class="plc-manual-desc">Comprehensive guide to using AETHON AI for database operations</div>
+                    </div>
+                    <button class="plc-manual-btn" onclick="window.open('/user-manual.pdf', '_blank')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        Open User Manual
+                    </button>
+                </div>
+
+                <div class="plc-grid">
+                    <!-- Column 1 -->
+                    <div class="plc-section">
+                        <div class="plc-section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                            Basic Queries
+                        </div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Show all employees</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">List all departments</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Who are the top 5 employees by reward points?</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Get a summary of recent announcements</div>
+                    </div>
+
+                    <!-- Column 2 -->
+                    <div class="plc-section">
+                        <div class="plc-section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                            Analysis Queries
+                        </div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Show employees who have been absent more than 2 times</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Calculate the total reward points issued by department</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Find the correlation between reward points and attendance</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Show absence trends for the last month</div>
+                    </div>
+
+                    <!-- Column 3 -->
+                    <div class="plc-section">
+                        <div class="plc-section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                            Insert Queries
+                        </div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Add a new employee named John Doe in Engineering department</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Create a new department called Marketing</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Record attendance for employee ID 5 as PRESENT for today</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Issue 100 reward points to employee ID 3 for excellent work</div>
+                    </div>
+
+                    <!-- Column 4 -->
+                    <div class="plc-section">
+                        <div class="plc-section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                            Update Queries
+                        </div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Update employee ID 2 email to john@example.com</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Change department name from IT to Technology</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Update the attendance status of employee ID 1 to PRESENT for today</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Increase reward points by 50 for employee ID 4</div>
+                    </div>
+
+                    <!-- Column 5 -->
+                    <div class="plc-section">
+                        <div class="plc-section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                            Delete Queries
+                        </div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Remove employee with ID 10</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Delete all announcements older than 30 days</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Clear attendance records from last year</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Remove the Marketing department</div>
+                    </div>
+                    
+                    <!-- Column 6 -->
+                    <div class="plc-section">
+                        <div class="plc-section-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                            Advanced Queries
+                        </div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Show employees who joined this month and have perfect attendance</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Calculate retention rate by department for Q1</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Find correlation between reward points and attendance</div>
+                        <div class="plc-prompt" onclick="copyToAI(this.innerText)">Generate monthly performance report with charts</div>
+                    </div>
+                </div>
+
+                <div class="plc-practices">
+                    <div class="plc-practices-title">Best Practices</div>
+                    
+                    <div class="plc-practice-item">
+                        <div class="plc-practice-title">Be Specific</div>
+                        <div class="plc-practice-desc">Include table names, column names, and specific criteria when possible</div>
+                    </div>
+                    
+                    <div class="plc-practice-item">
+                        <div class="plc-practice-title">Use Natural Language</div>
+                        <div class="plc-practice-desc">Write as you would speak - AETHON AI understands conversational queries</div>
+                    </div>
+                    
+                    <div class="plc-practice-item">
+                        <div class="plc-practice-title">Review Before Confirming</div>
+                        <div class="plc-practice-desc">Always review the generated query and affected rows before confirming destructive operations</div>
+                    </div>
+                    
+                    <div class="plc-practice-item">
+                        <div class="plc-practice-title">Start Simple</div>
+                        <div class="plc-practice-desc">Begin with basic queries and gradually move to complex operations as you get comfortable</div>
+                    </div>
+                </div>
+                
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        function copyToAI(promptText) {
+            // Optional: Store prompt in localStorage and redirect to AI command center
+            localStorage.setItem('aethon_pending_prompt', promptText);
+            window.location.href = '/ai-command.html?new=1';
+        }
+    </script>
+</body>
+</html>

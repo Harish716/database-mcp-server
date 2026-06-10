@@ -1,0 +1,13 @@
+{
+  "name": "aethon-mcp-server",
+  "version": "1.0.0",
+  "description": "Custom MCP Server for AETHON Database Control",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "sqlite3": "^5.1.7"
+  }
+}
